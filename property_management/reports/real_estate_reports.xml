@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="action_allocation_letter" model="ir.actions.report">
+            <field name="name">Allocation Letter</field>
+            <field name="model">real.estate.contract</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">property_management.allocation_letter</field>
+            <field name="report_file">property_management.allocation_letter</field>
+            <field name="binding_model_id" ref="model_real_estate_contract"/>
+            <field name="binding_type">report</field>
+        </record>
+
+       
+    </data>
+</odoo>

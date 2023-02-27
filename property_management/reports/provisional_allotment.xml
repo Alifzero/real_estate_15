@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="report_provisional_allotment">
+    <t t-call="web.external_layout">
+				<t t-set="o" t-value="o.with_context(lang=lang)" />
+				<div class="page">
+				<div style="opacity: 1;z-index: 1000;width: 100%;text-align:center;padding:0px;margin:0px;">
+					<img src='/property_management/static/src/img/provisional_allotment.JPG' style="position:absolute;text-align:center;vertical-align:center;width:100%;object-fit: cover;opacity:1;z-index:-1000;"/>
+				</div>
+			
+				<table style="width:100%;">
+					<tr>
+                        <td style="padding-left:115px;padding-top:370px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_id"/></td>
+					</tr>
+				</table>
+				<table style="width:100%;">
+					<tr >
+                        <td style="padding-left:300px;padding-top:13px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_id.so_do_wo"/></td>
+						
+					</tr>
+				</table>
+				<table style="width:100%;">
+					<tr >
+                        <td style="padding-left:110px;padding-top:12px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_cnic"/></td>
+					</tr>
+				</table>
+				<table style="width:100%;">
+					<tr>
+                        <td style="padding-left:135px;padding-top:15px;width:100%;font-size: 18px;font-family:Arial;"><span/><span t-field="o.contract_partner_mobile"/></td>
+					</tr>
+				</table>
+				<table style="width:100%;">
+					<tr >
+                        <td style="padding-left:105px;padding-top:10px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_id.email"/></td>
+					</tr>
+				</table>
+				<table style="width:100%;">
+					<tr >
+                        <td style="padding-left:260px;padding-top:15px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_street"/></td>
+					</tr>
+				</table>
+				<table style="width:100%;">
+					<tr >
+                        <td style="padding-left:175px;padding-top:55px;width:50%;font-size: 18px;font-family:Arial;"><span t-field="o.plot_id"/></td>
+						<td style="padding-left:55px;padding-top:55px;width:50%;font-size: 18px;font-family:Arial;"><span t-field="o.plot_id.size"/></td>
+					</tr>
+				</table>
+				<table style="width:100%;">
+					<tr >
+                        <td style="padding-left:150px;padding-top:22px;width:50%;font-size: 18px;font-family:Arial;"><span t-field="o.project_id.location"/></td>
+						<td style="padding-left:120px;padding-top:22px;width:50%;font-size: 18px;font-family:Arial;"><span t-field="o.plot_id.category_id"/></td>
+					</tr>
+				</table>
+				
+			</div>
+			
+    </t>
+<!--	</div>-->
+</template>
+
+<template id="provisional_allotment">
+    <t t-call="web.html_container">
+		<t t-foreach="docs" t-as="o">
+            <t t-set="lang" t-value="o.contract_partner_id.lang"/>
+            <t t-call="property_management.report_provisional_allotment" t-lang="lang"/>
+        </t>
+    </t>
+</template>
+
+<report
+        id="action_provisional_allotment"
+        string="Provisional Allotment"
+        model="real.estate.contract"
+        report_type="qweb-pdf"
+        name="property_management.provisional_allotment"
+        file="property_management.report_provisional_allotment"
+		print_report_name="('Provisional Allotment')">
+
+</report>
+
+</odoo>

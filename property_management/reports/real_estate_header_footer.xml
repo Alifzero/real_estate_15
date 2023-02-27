@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--<odoo>
+<template id="real_estate_reports_header_footer">
+		<div class="header">
+			<div class="row">
+				<div class="right">
+					<p><img src='/property_management/static/src/img/header.PNG' style="width:300px;height:150px;align:right;display: block" align="right"/></p>
+				</div>
+			</div>
+		</div>
+		<div class="footer" style="height:300px;">
+			<div>
+				<img src='/property_management/static/src/img/footer.PNG' class="center" style="width:100%;display: block;margin-left: auto;margin-right: auto;"/>
+			</div>
+		</div>
+</template>
+	
+</odoo>-->
+<odoo>
+<template id="sale_order_layout_header" inherit_id="web.external_layout_standard">
+    <!-- <xpath expr="//div[@class='header']" position="inside">
+		<div style="position: absolute;opacity: 0.25;z-index: 1000;width: 150%;">
+			<img src='/mcservices/static/src/img/mc_services_header.JPG' style="top:306px;position:absolute;width:65%;height:750px;opacity:0.85;z-index:-1000;"/>
+		</div>
+	</xpath> -->
+	<xpath expr="//div[@class='row']" position="replace">
+	</xpath>
+	<xpath expr="//div[@class='col-6']" position="replace">
+
+	</xpath>
+	
+	<xpath expr="//div[@class='col-12']" position="replace">
+	</xpath>
+	
+	<xpath expr="//div[@class='text-center']" position="replace">	
+	</xpath>
+</template>
+	
+</odoo>
