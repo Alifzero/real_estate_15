@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="report_confirmation_letter">
+    <t t-call="web.external_layout">
+				<t t-set="o" t-value="o.with_context(lang=lang)" />
+				<div class="page">
+				<div style="opacity: 1;z-index: 1000;width: 100%;text-align:center;padding:0px;margin:0px;">
+					<img src='/property_management/static/src/img/confirmation_letter.JPG' style="position:absolute;text-align:center;vertical-align:center;width:100%;opacity:1;z-index:-1000;"/>
+				</div>
+				<table style="width:100%;">
+		            <tr>
+		               <td style="padding-left:700px;padding-top: 30px;">
+		                     <img alt="barcode" t-att-src="'/report/barcode/?type=%s&amp;value=%s&amp;width=%s&amp;height=%s' % ('Code128', o.name, 600, 120)" style="max-height:50pt;max-width:100%;"/>
+		               </td>
+		           </tr>
+				   <tr>
+		               <td style="padding-left:790px;"><span t-field="o.name"/></td>
+		           </tr>
+		     	</table>
+				<table style="width:100%;">
+					<tr height="5px">
+                        <td style="padding-left:20px;padding-top: 300px;text-align: center;width:30%;font-size: 18px;font-family:Arial;"><span t-field="o.name"/></td>
+					</tr>
+					
+				</table>
+				<table style="width:100%;">
+					<tr>
+                        <td style="padding-left:218px;padding-top: 5px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.project_id"/></td>
+					</tr>
+				</table>
+				<table style="width:100%;">
+					<tr >
+                        <td style="padding-left:115px;padding-top: 88px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_id"/></td>
+						
+					</tr>
+				</table>
+				<table style="width:100%;">
+					<tr >
+                        <td style="padding-left:315px;padding-top: 5px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_id.so_do_wo"/></td>
+						
+					</tr>
+				</table>
+				<table style="width:100%;">
+					<tr>
+                        <td style="padding-left:110px;padding-top: 7px;width:100%;font-size: 18px;font-family:Arial;"><span/><span t-field="o.contract_partner_cnic"/></td>
+					</tr>
+				</table>
+				<table style="width:100%;">
+					<tr >
+                        <td style="padding-left:260px;padding-top: 5px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_street"/></td>
+					</tr>
+				</table>
+				<table style="width:100%;">
+					<tr >
+                        <td style="padding-left:120px;padding-top: 40px;width:50%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_mobile"/></td>
+						<td style="padding-left:160px;padding-top: 40px;width:50%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_phone"/></td>
+					</tr>
+				</table>
+				<table style="width:100%;">
+					<tr >
+                        <td style="padding-left:130px;padding-top: 13px;width:40%;font-size: 18px;font-family:Arial;"><span t-field="o.plot_id"/></td>
+						<td style="padding-left:130px;padding-top: 13px;width:30%;font-size: 18px;font-family:Arial;"><span t-field="o.plot_id.size"/></td>
+						<td style="padding-left:70px;padding-top: 13px;width:30%;font-size: 18px;font-family:Arial;"><span t-field="o.plot_id.category_id"/></td>
+					</tr>
+				</table>
+				<table style="width:100%;">
+					<tr >
+                        <td style="padding-left:150px;padding-top: 10px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.project_id.location"/></td>
+					</tr>
+				</table>
+		<!--		<table style="width:100%;">
+					<tr >
+                        <td style="padding-left:260px;padding-top: 5px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_street"/></td>
+					</tr>
+				</table>-->
+				
+
+			</div>
+			
+    </t>
+<!--	</div>-->
+</template>
+
+<template id="confirmation_letter">
+    <t t-call="web.html_container">
+		<t t-foreach="docs" t-as="o">
+            <t t-set="lang" t-value="o.contract_partner_id.lang"/>
+            <t t-call="property_management.report_confirmation_letter" t-lang="lang"/>
+        </t>
+    </t>
+</template>
+
+<report
+        id="action_confirmation_letter"
+        string="Confirmation Letter"
+        model="real.estate.contract"
+        report_type="qweb-pdf"
+        name="property_management.confirmation_letter"
+        file="property_management.report_confirmation_letter"
+		print_report_name="('Confirmation Letter')">
+
+</report>
+
+</odoo>
