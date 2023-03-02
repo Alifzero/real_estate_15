@@ -3,10 +3,10 @@
 
 <template id="report_possession_letter">
     <t t-call="web.external_layout">
-				<t t-set="o" t-value="o.with_context(lang=lang)" />
+				<t t-set="o" t-value="o.with_context(lang=lang)"/>
 				<div class="page">
 				<div style="opacity: 1;z-index: 1000;width: 100%;text-align:center;padding:0px;margin:0px;">
-					<img src='/property_management/static/src/img/possession_letter.JPG' style="position:absolute;text-align:center;vertical-align:center;width:100%;opacity:1;z-index:-1000;"/>
+					<img src="/property_management/static/src/img/possession_letter.jpg" style="position:absolute;text-align:center;vertical-align:center;width:100%;opacity:1;z-index:-1000;"/>
 				</div>
 				<table style="width:100%;">
 		            <tr>
@@ -15,55 +15,55 @@
 		               </td>
 		           </tr>
 				   <tr>
-		               <td style="padding-left:790px;"><span t-field="o.name"/></td>
+		               <td style="padding-left:730px;"><span t-field="o.name"/></td>
 		           </tr>
 		     	</table>
 				<table style="width:100%;">
 					<tr>
-                        <td style="padding-left:810px;padding-top:268px;width:100%;font-size: 18px;font-family:Arial;"><span t-esc="datetime.datetime.now().strftime('%d/%m/%Y')"/></td>
+                        <td style="padding-left:800px;padding-top:260px;width:100%;font-size: 18px;font-family:Arial;"><span t-esc="datetime.datetime.now().strftime('%d/%m/%Y')"/></td>
 					</tr>
 				</table>
 				<table style="width:100%;">
 					<tr>
-                        <td style="padding-left:115px;padding-top:68px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_id"/></td>
+                        <td style="padding-left:115px;padding-top:62px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_id"/></td>
 					</tr>
 				</table>
 				<table style="width:100%;">
-					<tr >
-                        <td style="padding-left:300px;padding-top:15px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_id.so_do_wo"/></td>
+					<tr>
+                        <td style="padding-left:300px;padding-top:12px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_id.so_do_wo"/></td>
 						
 					</tr>
 				</table>
 				<table style="width:100%;">
-					<tr >
-                        <td style="padding-left:110px;padding-top:8px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_cnic"/></td>
+					<tr>
+                        <td style="padding-left:110px;padding-top:7px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_cnic"/></td>
 					</tr>
 				</table>
 				<table style="width:100%;">
 					<tr>
-                        <td style="padding-left:135px;padding-top:10px;width:100%;font-size: 18px;font-family:Arial;"><span/><span t-field="o.contract_partner_mobile"/></td>
+                        <td style="padding-left:135px;padding-top:9px;width:100%;font-size: 18px;font-family:Arial;"><span/><span t-field="o.contract_partner_mobile"/></td>
 					</tr>
 				</table>
 				<table style="width:100%;">
-					<tr >
+					<tr>
                         <td style="padding-left:260px;padding-top:10px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.contract_partner_street"/></td>
 					</tr>
 				</table>
 				<table style="width:100%;">
-					<tr >
-                        <td style="padding-left:170px;padding-top:35px;width:40%;font-size: 18px;font-family:Arial;"><span t-field="o.plot_id"/></td>
-						<td style="padding-left:50px;padding-top:35px;width:30%;font-size: 18px;font-family:Arial;"><span t-field="o.plot_id.size"/></td>
-						<td style="padding-left:70px;padding-top:35px;width:30%;font-size: 18px;font-family:Arial;"><span t-field="o.plot_id.category_id"/></td>
+					<tr>
+                        <td style="padding-left:220px;padding-top:55px;width:40%;font-size: 18px;font-family:Arial;"><span t-field="o.plot_id"/></td>
+						<td style="padding-left:90px;padding-top:55px;width:30%;font-size: 18px;font-family:Arial;"><span t-field="o.plot_id.size"/></td>
+						<td style="padding-left:120px;padding-top:55px;width:30%;font-size: 18px;font-family:Arial;"><span t-field="o.plot_id.category_id"/></td>
 					</tr>
 				</table>
 				<table style="width:100%;">
-					<tr >
-                        <td style="padding-left:150px;padding-top:15px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.project_id.location"/></td>
+					<tr>
+                        <td style="padding-left:150px;padding-top:10px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.project_id.location"/></td>
 					</tr>
 				</table>
 				<table style="width:100%;">
-					<tr >
-                        <td style="padding-left:280px;padding-top:106px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.project_id"/></td>
+					<tr>
+                        <td style="padding-left:280px;padding-top:100px;width:100%;font-size: 18px;font-family:Arial;"><span t-field="o.project_id"/></td>
 					</tr>
 				</table>
 				

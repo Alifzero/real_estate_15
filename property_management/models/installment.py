@@ -67,6 +67,7 @@ class AccountPayment(models.Model):
 class Installment(models.Model):
     _name = 'real.estate.installment'
     _description = 'Real estate installment'
+    _order='installment_no asc'
 
     name = fields.Char(related='contract_id.plot_id.name')
     plot_id = fields.Many2one(

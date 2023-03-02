@@ -46,7 +46,7 @@
 						<field name="size" required="1"/>
 						<field name="is_west_open" required="1"/>
 						<field name="is_corner" required="1"/>
-						<field name="amenity_facing" widget="many2many_tags" required="1"/>
+						<field name="amenity_facing" widget="many2many_tags"/>
 						<field name="road_facing" required="1"/>
 						<field name="property_value" required="1"/>
 					</group>
@@ -169,6 +169,15 @@
                         <button name="action_inactive"
                                 attrs="{'invisible': [('state','in', ['draft','confirm','inactive'])]}"
                                 type="object" string="Inactive" class="oe_highlight"/>
+						 <button name="populate_installments" string="Generate plan"
+                                                type="object" class="btn-primary"
+                                                attrs="{'invisible': ['|',('state','in', ['draft','active','inactive']),('generate_installment_plan', '!=', False)]}"/>
+                    	<button name="generate_possession_charges" string="Generate Possession Charges"
+                                type="object" class="btn-primary"
+                                attrs="{'invisible': ['|','|',('state','in', ['draft','active','inactive']),('generate_possession_amount', '!=', False),('possession_amount','=',0)]}"/>
+						<button name="generate_demarcation_charges" string="Generate Demarcation Charges"
+                                type="object" class="btn-primary"
+                                attrs="{'invisible': ['|','|',('state','in', ['draft','active','inactive']),('generate_demarcation_amount', '!=', False),('demarcation_amount','=',0)]}"/>
                         <field name="state" widget="statusbar" statusbar_visible="draft,confirm,active,inactive"/>
                     </header>
                     <sheet>
@@ -244,6 +253,9 @@
 										<field name="installment_product_id" attrs="{'required':True,'readonly': [('state','in', ['confirm','active','inactive'])]}"/>
                                         <field name="token_money_product_id" attrs="{'required':True,'readonly': [('state','in', ['confirm','active','inactive'])]}"/>
                                         <field name="down_payment_product_id" attrs="{'required':True,'readonly': [('state','in', ['confirm','active','inactive'])]}"/>
+										<field name="possission_product_id" attrs="{'required':True,'readonly': [('state','in', ['confirm','active','inactive'])]}"/>
+                                        <field name="demarcation_product_id" attrs="{'required':True,'readonly': [('state','in', ['confirm','active','inactive'])]}"/>
+                                        <field name="half_yearly_product_id" attrs="{'required':True,'readonly': [('state','in', ['confirm','active','inactive'])]}"/>
                                     </group>
                                     <group string="Payment Plan" style="width:400px; margin-left:200px;" attrs="{'invisible':[('contract_type', '!=', 'sell')]}">
 
@@ -255,16 +267,25 @@
                                         <field name="down_payment_amt" string="Insert down payment" attrs="{'invisible':[('payment_plan_type', '!=', 'install_down')],'readonly':[('state','in', ['confirm','active','inactive'])]}"/>
                                         <field name="down_payment" string="Down payment Rs." readonly="1" force_save="1" attrs="{'invisible':[('payment_plan_type', '!=', 'install_down')],'readonly':[('state','in', ['confirm','active','inactive'])]}"/>
                                         <field name="down_payment_date" string="Down payment due date" attrs="{'invisible':[('payment_plan_type', '!=', 'install_down')],'readonly':[('state','in', ['confirm','active','inactive'])]}"/>
-                                        <field name="total_without_down_payment" readonly="1" force_save="1" string="Installments Balance" attrs="{'invisible':[('payment_plan_type', '!=', 'install_down')],'readonly':[('state','in', ['confirm','active','inactive'])]}"/>
+										<field name="possession_amount"  attrs="{'invisible':[('payment_plan_type', '!=', 'install_down')],'readonly':[('state','in', ['confirm','active','inactive'])]}"/>
+										<field name="possession_amount_date"  attrs="{'invisible':[('payment_plan_type', '!=', 'install_down')],'readonly':[('state','in', ['active','inactive'])]}"/>
+										<field name="demarcation_amount"  attrs="{'invisible':[('payment_plan_type', '!=', 'install_down')],'readonly':[('state','in', ['confirm','active','inactive'])]}"/>
+										<field name="demarcation_amount_date"  attrs="{'invisible':[('payment_plan_type', '!=', 'install_down')],'readonly':[('state','in', ['active','inactive'])]}"/>
+										<field name="half_yearly_amount"  attrs="{'invisible':[('payment_plan_type', '!=', 'install_down')],'readonly':[('state','in', ['confirm','active','inactive'])]}"/>
+										<field name="total_half_year"  attrs="{'invisible':[('payment_plan_type', '!=', 'install_down')],'readonly':[('state','in', ['confirm','active','inactive'])]}"/>
+										<field name="total_half_yearly_amount"  attrs="{'invisible':[('payment_plan_type', '!=', 'install_down')],'readonly':[('state','in', ['confirm','active','inactive'])]}"/>                                        
+										<field name="total_without_down_payment" readonly="1" force_save="1" string="Installments Balance" attrs="{'invisible':[('payment_plan_type', '!=', 'install_down')],'readonly':[('state','in', ['confirm','active','inactive'])]}"/>
                                         <field name="frequency" string="Installments frequency" attrs="{'invisible': [('payment_plan_type', 'not in', ['install_down', 'install'])],'readonly': [('state','in', ['confirm','active','inactive'])]}"/>
                                         <field name="total_installments" string="Total installments" attrs="{'invisible': [('payment_plan_type', 'not in', ['install_down', 'install'])],'readonly':[('state','in', ['confirm','active','inactive'])]}"/>
                                         <field name="first_installment_date" string="First installment date"
                                                attrs="{'invisible': [('payment_plan_type', 'not in', ['install_down', 'install'])],'readonly':[('state','in', ['confirm','active','inactive'])]}"/>
                                         <field name="generate_installment_plan" invisible="1"/>
-                                        <button name="populate_installments" string="Generate plan"
-                                                type="object" class="btn-primary"
-                                                attrs="{'invisible': ['|',('state','in', ['draft','active','inactive']),('generate_installment_plan', '!=', False)]}"/>
-                                    </group>
+										<field name="generate_possession_amount" invisible="1"/>
+										<field name="generate_demarcation_amount" invisible="1"/>
+										<field name="total_paid" readonly="1"/>
+										<field name="balance_amount" readonly="1"/>
+                                       
+									</group>
                                     <group string="Buy back" style="width:400px; margin-left:200px;" attrs="{'invisible':[('contract_type', '!=', 'buy')]}">
                                         <field name="buy_back_type"/>
                                         <field name="total_installments_buyback" attrs="{'invisible':[('buy_back_type', '!=', 'payback_installments')]}"/>
@@ -276,8 +297,7 @@
                                         <button name="Populate_plan" string="Generate Plan"
                                                 type="object" class="btn-primary"
                                                 attrs="{'invisible':['|',('state','in', ['draft','active','inactive']),('generate_installment_plan', '!=', False)]}"></button>
-                                        <!--                                        <button name="View_buyback_bill" string="View Bill"-->
-                                        <!--                                                type="object" class="btn-primary"></button>-->
+
                                     </group>
                                 </group>
                             </page>
@@ -286,16 +306,16 @@
                                 <!--                                <header>-->
                                 <!--                                </header>-->
                                 <field name="installment_id">
-                                    <tree>
-                                        <field name="receipt_type" invisible="1" force_save="1" width="50"/>
-                                        <field name="installment_no" width="50"/>
-                                        <field name="product_id" width="120" string="Installment Type"/>
-                                        <field name="plot_id" width="120" string="Property"/>
-                                        <field name="due_date" string="Due Date" width="70"/>
-                                        <field name="frequency" width="70" />
+                                    <tree editable="bottom" edit="false" create="false">
+                                        <field name="receipt_type" readonly="1" invisible="1" force_save="1" width="50"/>
+                                        <field name="installment_no" readonly="1" width="50"/>
+                                        <field name="product_id" width="120" readonly="1" string="Installment Type"/>
+                                        <field name="plot_id" width="120" readonly="1" string="Property"/>
+                                        <field name="due_date" string="Due Date" readonly="1" width="70"/>
+                                        <field name="frequency" width="70" readonly="1"/>
                                         <field name="installment_type" invisible="1" force_save="1"/>
                                         <field name="profit_on_buyback" attrs="{'column_invisible': [('parent.contract_type', '=',  'sell')]}"/>
-                                        <field name="amount" width="100"/>
+                                        <field name="amount" width="100" readonly="1"/>
                                         <field name="invoice_status" invisible="1" force_save="1"/>
                                         <button name="view_invoice_hx" type="object" string="View Invoice" attrs="{'invisible':[('invoice_status', '=', False)]}"/>
                                         <button name="create_invoice_hx" type="object" string="Create Invoice" attrs="{'invisible':[('invoice_status', '=', True)]}"/>
@@ -616,7 +636,22 @@
                 </form>
             </field>
         </record>
-
+		<record id="view_contract_tree" model="ir.ui.view">
+            <field name="name">real.estate.contract.tree</field>
+            <field name="model">real.estate.contract</field>
+            <field name="priority" eval="1"/>
+            <field name="arch" type="xml">
+				<tree>
+					<field name="name"/>
+					<field name="contract_partner_name"/>
+					<field name="contract_type"/>
+	                <field name="project_id"/>
+					<field name="block_id"/>
+					<field name="plot_id"/>
+					<field name="state"/>
+				</tree>
+            </field>
+		</record>
         <record id="view_contract_kanban" model="ir.ui.view">
             <field name="name">real.estate.contract.kanban</field>
             <field name="model">real.estate.contract</field>
@@ -630,6 +665,11 @@
                     <field name="contract_type"/>
                     <field name="property_value"/>
                     <field name="amt_after_disc"/>
+					<field name="name"/>
+					<field name="project_id"/>
+					<field name="block_id"/>
+					<field name="plot_id"/>
+					<field name="state"/>
                     <!--                    <field name="size"/>-->
                     <templates>
                         <t t-name="kanban-box">
@@ -651,9 +691,13 @@
                                     <div class="o_kanban_tags_section">
                                         <ul>
                                             <!--                                            <li>Customer: <field name="contract_partner_name"/></li>-->
-                                            <li>Contract Type: <field name="contract_type"/></li>
+                                            <li>Contract No.: <field name="name"/></li>
+											<li>Contract Type: <field name="contract_type"/></li>
+											<li>Project: <field name="project_id"/></li>
+											<li>Block: <field name="block_id"/></li>
                                             <li>Plot: <field name="plot_id"/></li>
                                             <li>Value: <field name="amt_after_disc"/></li>
+											<li>State: <field name="state"/></li>
                                         </ul>
                                     </div>
                                 </div>

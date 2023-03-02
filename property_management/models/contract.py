@@ -57,7 +57,7 @@ class contract(models.Model):
         'real.estate.block', 'Block',domain="[('state','=','available'),('project_id','=',project_id)]")
     plot_id = fields.Many2one(
         'real.estate.plot', 'Plot',domain="[('state','=','available'),('block_id','=',block_id)]")
-    property_value = fields.Float('Property Value', related='plot_id.property_value')
+    property_value = fields.Float('Property Value', compute='cal_property_value',store=True)
     property_name = fields.Char('Property Name', related='plot_id.name')
     installment_id = fields.One2many('real.estate.installment', 'contract_id')
     first_installment_date = fields.Date(string='First Installment due date')
@@ -69,6 +69,8 @@ class contract(models.Model):
     down_payment_product_id = fields.Many2one('product.product', string='Down payment Product', readonly=False)
     buyback_product_id = fields.Many2one('product.product', string='Buyback Product', readonly=False)
     generate_installment_plan = fields.Boolean(default=False)
+    generate_possession_amount = fields.Boolean(default=False)
+    generate_demarcation_amount = fields.Boolean(default=False)
     buy_back_type = fields.Selection([('payback_full', 'Full Payment'),('payback_installments', 'Installments')])
     # buy_back_type = fields.Selection([('payback_full', 'Full Payment'), ('payback_installments', 'Installments'),
     #                                   ('payback_property_adjust','Adjust payment in other properties'), ('payback_payment_and_property','Partial payment and partial adjustment in property')])
@@ -100,11 +102,52 @@ class contract(models.Model):
     road_facing_charges=fields.Float('Road Facing Charges (%)',default=5)
     total_value = fields.Float('Total Property Value', compute='cal_total_value',store=True)
     invoice_count = fields.Integer(compute='_compute_invoice_count', string="Invoices")
+    possession_amount=fields.Float('Possession Amount')
+    possession_amount_date=fields.Date('Possession Due Date')
+    demarcation_amount=fields.Float('Demarcation Amount')
+    demarcation_amount_date=fields.Date('Demarcation Due Date')
+    half_yearly_amount=fields.Float('Half Yearly Amount')
+    total_half_year=fields.Integer('Total Half Year')
+    total_half_yearly_amount=fields.Float('Total Half Yearly Amount',compute='cal_half_yearly_amount',store=True)
+    possission_product_id = fields.Many2one('product.product', string='Possession Product')
+    demarcation_product_id = fields.Many2one('product.product', string='Demarcation Product')
+    half_yearly_product_id = fields.Many2one('product.product', string='Half Yearly Product')
+    total_paid=fields.Float('Total Paid Amount',compute='cal_paid_amount')
+    balance_amount=fields.Float('Balance Amount',compute='cal_balance_amount')
     _sql_constraints = [
     ('value_discipline_name_unique', 'unique (name)',
         'Discipline name must be unique. !')
     ]
     
+    @api.depends('installment_id')
+    def cal_paid_amount(self):
+        for each in self:
+            paid_amount=0
+            installment_obj=self.env['real.estate.installment'].search([('contract_id','=',each.id),('move_id.payment_state','=','paid')])
+            for x in installment_obj:
+                paid_amount+=x.amount
+            each.total_paid=paid_amount
+    
+    @api.depends('total_paid')
+    def cal_balance_amount(self):
+        for each in self:
+            each.balance_amount=each.property_value-each.total_paid
+            
+    @api.depends('plot_id')
+    def cal_property_value(self):
+        for each in self:
+            if each.plot_id:
+                each.property_value=each.plot_id.property_value
+            else:
+                each.property_value=0
+    @api.depends('half_yearly_amount','total_half_year')
+    def cal_half_yearly_amount(self):
+        for each in self:
+            if each.half_yearly_amount and each.total_half_year:
+                each.total_half_yearly_amount=each.half_yearly_amount*each.total_half_year
+            else:
+                each.total_half_yearly_amount=0
+            
     def _compute_invoice_count(self):
         for each in self:
             each.invoice_count=0
@@ -183,7 +226,8 @@ class contract(models.Model):
                 'default_plot_id': self.plot_id.id,
                 'default_contract_id': self.id,
             }}
-
+    
+    @api.depends('total_value','down_payment','resale_value','discount_hx','possession_amount','demarcation_amount','total_half_yearly_amount')
     def _compute_amt_after_disc(self):
         for line in self:
             line.amt_after_disc = line.total_value - line.discount_hx
@@ -196,6 +240,12 @@ class contract(models.Model):
                     line.total_without_down_payment = line.amt_after_disc - line.down_payment + line.resale_value
                 else:
                     line.total_without_down_payment = line.amt_after_disc - line.down_payment
+            if line.possession_amount:
+                line.total_without_down_payment = line.total_without_down_payment - line.possession_amount
+            if line.demarcation_amount:
+                line.total_without_down_payment = line.total_without_down_payment - line.demarcation_amount
+            if line.total_half_yearly_amount:
+                line.total_without_down_payment=line.total_without_down_payment-line.total_half_yearly_amount
 
     @api.onchange('contract_type')
     def onchange_contract_type(self):
@@ -212,9 +262,9 @@ class contract(models.Model):
         if self.contract_type == 'sell':
             self.check_buyback_selection = False
 
-    @api.onchange('property_value')
-    def onchange_property_value(self):
-        self.amt_after_disc = self.property_value - self.discount_hx
+#     @api.onchange('property_value')
+#     def onchange_property_value(self):
+#         self.amt_after_disc = self.property_value - self.discount_hx
 
     @api.onchange('buy_back_type')
     def onchange_buy_back_type(self):
@@ -292,7 +342,45 @@ class contract(models.Model):
     @api.onchange('discount_hx')
     def generate_amt_after_discount(self):
         self._compute_amt_after_disc()
-
+    
+    def generate_possession_charges(self):
+        if self.possession_amount_date and self.possession_amount:
+            vals = {
+                   'installment_no': 0,
+                   'amount': self.possession_amount,
+                   'due_date': self.possession_amount_date,
+                   'frequency': 'One time',
+                   'contract_id': self.id,
+                   'product_id': self.possission_product_id.id,
+                   'plot_id': self.plot_id.id,
+            
+               }
+            try:
+                self.installment_id.sudo().create(vals)
+                self.write({'generate_possession_amount':True})
+            except AccessError:
+                _logger.warning("Access error")
+        else:
+            raise ValidationError('Possession amount and due date should not be empty.')
+    def generate_demarcation_charges(self):
+        if self.demarcation_amount_date and self.demarcation_amount:
+            vals = {
+                   'installment_no': 0,
+                   'amount': self.demarcation_amount,
+                   'due_date': self.demarcation_amount_date,
+                   'frequency': 'One time',
+                   'contract_id': self.id,
+                   'product_id': self.demarcation_product_id.id,
+                   'plot_id': self.plot_id.id,
+            
+               }
+            try:
+                self.installment_id.sudo().create(vals)
+                self.write({'generate_demarcation_amount':True})
+            except AccessError:
+                _logger.warning("Access error")
+        else:
+            raise ValidationError('Demarcation amount and due date should not be empty.')
     def populate_installments(self):
         if not self.plot_id:
             raise UserError('Select property first.')
@@ -316,7 +404,7 @@ class contract(models.Model):
                 _logger.warning("Access error")
 
         if self.payment_plan_type == 'install_down':
-            amount_residual = (self.amt_after_disc - self.down_payment)
+            amount_residual = self.total_without_down_payment
             single_installment = (amount_residual / self.total_installments)
             single_installment = round(single_installment,2)
             next_installment = self.first_installment_date
@@ -337,35 +425,46 @@ class contract(models.Model):
 
             # Installments generation
             if self.frequency == 'monthly':
-                for i in range(self.total_installments-1):
-                    vals = {
+                for i in range(self.total_installments++self.total_half_year):
+                    if (i+1) % 6==0:
+                        vals = {
                         'installment_no': i+1,
-                        'amount': single_installment,
+                        'amount': self.half_yearly_amount,
                         'due_date': next_installment,
-                        'frequency': self.frequency,
+                        'frequency': 'half yearly',
                         'contract_id': self.id,
-                        'product_id': self.installment_product_id.id,
+                        'product_id': self.half_yearly_product_id.id,
                         'plot_id': self.plot_id.id,
-                    }
+                        }
+                    else:
+                        vals = {
+                            'installment_no': i+1,
+                            'amount': single_installment,
+                            'due_date': next_installment,
+                            'frequency': self.frequency,
+                            'contract_id': self.id,
+                            'product_id': self.installment_product_id.id,
+                            'plot_id': self.plot_id.id,
+                        }
                     next_installment = next_installment + relativedelta.relativedelta(months=1)
                     try:
                         self.installment_id.sudo().create(vals)
                     except AccessError:
                         _logger.warning("Access error")
                 # next_installment = next_installment + relativedelta.relativedelta(months=1)
-                last_installment_vals = {
-                    'installment_no': self.total_installments,
-                    'amount': last_installment,
-                    'due_date': next_installment,
-                    'frequency': self.frequency,
-                    'contract_id': self.id,
-                    'product_id': self.installment_product_id.id,
-                    'plot_id': self.plot_id.id,
-                }
-                try:
-                    self.installment_id.sudo().create(last_installment_vals)
-                except AccessError:
-                    _logger.warning("Access error")
+#                 last_installment_vals = {
+#                     'installment_no': self.total_installments,
+#                     'amount': last_installment,
+#                     'due_date': next_installment,
+#                     'frequency': self.frequency,
+#                     'contract_id': self.id,
+#                     'product_id': self.installment_product_id.id,
+#                     'plot_id': self.plot_id.id,
+#                 }
+#                 try:
+#                     self.installment_id.sudo().create(last_installment_vals)
+#                 except AccessError:
+#                     _logger.warning("Access error")
 
             if self.frequency == 'quarterly':
                 for i in range(self.total_installments-1):
@@ -384,19 +483,19 @@ class contract(models.Model):
                     except AccessError:
                         _logger.warning("Access error")
                 # next_installment = next_installment + relativedelta.relativedelta(months=3)
-                vals = {
-                    'installment_no': self.total_installments,
-                    'amount': last_installment,
-                    'due_date': next_installment,
-                    'frequency': self.frequency,
-                    'contract_id': self.id,
-                    'product_id': self.installment_product_id.id,
-                    'plot_id': self.plot_id.id,
-                }
-                try:
-                    self.installment_id.sudo().create(vals)
-                except AccessError:
-                    _logger.warning("Access error")
+#                 vals = {
+#                     'installment_no': self.total_installments,
+#                     'amount': last_installment,
+#                     'due_date': next_installment,
+#                     'frequency': self.frequency,
+#                     'contract_id': self.id,
+#                     'product_id': self.installment_product_id.id,
+#                     'plot_id': self.plot_id.id,
+#                 }
+#                 try:
+#                     self.installment_id.sudo().create(vals)
+#                 except AccessError:
+#                     _logger.warning("Access error")
 
         self.plot_id.update({
             'state': 'booked',
@@ -426,19 +525,19 @@ class contract(models.Model):
                     except AccessError:
                         _logger.warning("Access error")
                 # next_installment = next_installment + relativedelta.relativedelta(months=1)
-                vals = {
-                    'installment_no': self.total_installments,
-                    'amount': last_installment,
-                    'due_date': next_installment,
-                    'frequency': self.frequency,
-                    'contract_id': self.id,
-                    'product_id': self.installment_product_id.id,
-                    'plot_id': self.plot_id.id,
-                }
-                try:
-                    self.installment_id.sudo().create(vals)
-                except AccessError:
-                    _logger.warning("Access error")
+#                 vals = {
+#                     'installment_no': self.total_installments,
+#                     'amount': last_installment,
+#                     'due_date': next_installment,
+#                     'frequency': self.frequency,
+#                     'contract_id': self.id,
+#                     'product_id': self.installment_product_id.id,
+#                     'plot_id': self.plot_id.id,
+#                 }
+#                 try:
+#                     self.installment_id.sudo().create(vals)
+#                 except AccessError:
+#                     _logger.warning("Access error")
             if self.frequency == 'quarterly':
                 for i in range(self.total_installments-1):
                     # next_installment = next_installment + relativedelta.relativedelta(months=3)
@@ -457,19 +556,19 @@ class contract(models.Model):
                     except AccessError:
                         _logger.warning("Access error")
                 # next_installment = next_installment + relativedelta.relativedelta(months=3)
-                vals = {
-                    'installment_no': self.total_installments,
-                    'amount': last_installment,
-                    'due_date': next_installment,
-                    'frequency': self.frequency,
-                    'contract_id': self.id,
-                    'product_id': self.installment_product_id.id,
-                    'plot_id': self.plot_id.id,
-                }
-                try:
-                    self.installment_id.sudo().create(vals)
-                except AccessError:
-                    _logger.warning("Access error")
+#                 vals = {
+#                     'installment_no': self.total_installments,
+#                     'amount': last_installment,
+#                     'due_date': next_installment,
+#                     'frequency': self.frequency,
+#                     'contract_id': self.id,
+#                     'product_id': self.installment_product_id.id,
+#                     'plot_id': self.plot_id.id,
+#                 }
+#                 try:
+#                     self.installment_id.sudo().create(vals)
+#                 except AccessError:
+#                     _logger.warning("Access error")
 
     def Populate_plan(self):
         temp = 0
